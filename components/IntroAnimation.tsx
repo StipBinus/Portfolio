@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import Hero from './Hero'
 
 export default function IntroAnimation() {
   // separate states for independent animations
@@ -83,13 +84,6 @@ export default function IntroAnimation() {
       </div>
     )
   }
-
-  return (
-    <main className="min-h-screen bg-white text-black flex items-center justify-center">
-      <div className="text-center p-6">
-        <h2 className="text-3xl font-semibold">Welcome — main content</h2>
-        <p className="mt-4 text-gray-600">This is where your portfolio content goes.</p>
-      </div>
-    </main>
-  )
+  // Render the Hero component once intro is finished
+  return <Hero />
 }
