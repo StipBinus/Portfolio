@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react'
+import AboutMe from './AboutMe'
+import FixedHeader from './FixedHeader'
 
 const Hero: React.FC = () => {
   const [currentTitle, setCurrentTitle] = useState('A Developer')
@@ -15,10 +17,40 @@ const Hero: React.FC = () => {
         currentIndex = (currentIndex + 1) % titles.length
         setCurrentTitle(titles[currentIndex])
         setIsAnimating(false)
-      }, 2000) // Half of animation duration
+      }, 1000) // Half of animation duration
     }, 12000) // Change every 12 seconds
 
     return () => clearInterval(interval)
+  }, [])
+
+  useEffect(() => {
+    let lastScrollY = window.scrollY
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY
+      const heroThreshold = 50
+      const aboutThreshold = window.innerHeight * 0.8 // AboutMe starts after Hero height
+
+      // Scrolling down from Hero section
+      if (currentScrollY > lastScrollY && currentScrollY > heroThreshold && currentScrollY < aboutThreshold) {
+        const aboutSection = document.getElementById('about-me')
+        if (aboutSection) {
+          aboutSection.scrollIntoView({ behavior: 'smooth' })
+        }
+      }
+      // Scrolling up from AboutMe section
+      else if (currentScrollY < lastScrollY && currentScrollY > aboutThreshold * 0.5) {
+        const heroSection = document.querySelector('.hero-section')
+        if (heroSection) {
+          heroSection.scrollIntoView({ behavior: 'smooth' })
+        }
+      }
+
+      lastScrollY = currentScrollY
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
   useEffect(() => {
@@ -28,7 +60,7 @@ const Hero: React.FC = () => {
     const shapeStates = new Map<HTMLElement, { currentX: number; currentY: number; targetX: number; targetY: number }>()
 
     const handleMouseMove = (e: MouseEvent) => {
-      const shapes = document.querySelectorAll('.shape-interactive')
+      const shapes = document.querySelectorAll('.shape-interactive:not(.nav-square)')
 
       shapes.forEach((shape, index) => {
         const htmlShape = shape as HTMLElement
@@ -112,15 +144,17 @@ const Hero: React.FC = () => {
     }
   }, [])
   return (
-      <div style={{
+    <>
+      <FixedHeader />
+      <div className="hero-section" style={{
       margin: 0,
       padding: 0,
       fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
       minHeight: '100vh',
       width: '100vw',
       overflow: 'hidden',
-      background: '#fcfcf7',
-      position: 'relative',
+      background: 'linear-gradient(to right, #fffaf0ff 0%, #fdfaecff 100%)',
+      position: 'relative', 
     }}>
       <style>{`
         @keyframes fadeInUp {
@@ -138,6 +172,14 @@ const Hero: React.FC = () => {
         @keyframes scaleIn {
           0% { opacity: 0; transform: scale(0.8); }
           100% { opacity: 1; transform: scale(1); }
+        }
+        @keyframes scaleInRotate {
+          0% { opacity: 0; scale: 0.8; }
+          100% { opacity: 1; scale: 1; }
+        }
+        @keyframes scaleInRotateActive {
+          0% { opacity: 0; scale: 0.8; }
+          100% { opacity: 1; scale: 1; }
         }
         @keyframes scaleInDot {
           0% { opacity: 0; transform: scale(0.8); }
@@ -159,9 +201,30 @@ const Hero: React.FC = () => {
         .animate-fade-in-left { animation: fadeInLeft 0.8s ease-out forwards; }
         .animate-fade-in-right { animation: fadeInRight 0.8s ease-out forwards; }
         .animate-scale-in { animation: scaleIn 0.6s ease-out forwards; }
+        .animate-scale-in-rotated { 
+          animation: scaleInRotate 0.6s ease-out forwards;
+        }
+        .animate-scale-in-rotated-active { 
+          animation: scaleInRotateActive 0.6s ease-out forwards;
+        }
+        
+        .nav-square {
+          cursor: pointer;
+          transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1), background 0.6s cubic-bezier(0.4, 0.0, 0.2, 1), border-color 0.3s ease;
+          background: transparent;
+        }
+        
+        .nav-square:hover {
+          border-color: #1a1a1a;
+        }
+        
+        .nav-square.is-diamond {
+          transform: rotate(45deg) !important;
+          background: #242424ff !important;
+        }
         .animate-draw-in { animation: drawIn 1s ease-out forwards; transform-origin: left; }
-        .animate-slide-out-right { animation: slideOutRight 2s ease-out forwards; }
-        .animate-slide-in-right { animation: slideInRight 2s ease-out forwards; }
+        .animate-slide-out-right { animation: slideOutRight 1s ease-out forwards; }
+        .animate-slide-in-right { animation: slideInRight 1s ease-out forwards; }
         
         .shape-interactive { 
           transform-origin: center;
@@ -181,9 +244,52 @@ const Hero: React.FC = () => {
           pointer-events: none; 
           z-index: 5;
         }
+        /* Left background square pattern */
+        @keyframes leftSquareFade {
+          0% { opacity: 0; transform: translateY(6px) scale(0.95); }
+          60% { opacity: 0.9; transform: translateY(2px) scale(0.98); }
+          100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .left-pattern {
+          position: absolute;
+          left: 0;
+          top: 0;
+          height: 100vh;
+          display: grid;
+          grid-template-columns: repeat(12, 14px);
+          grid-auto-rows: 14px;
+          gap: 6px;
+          width: 240px;
+          padding: 24px 12px;
+          opacity: 0.12;
+          pointer-events: none;
+          z-index: 1;
+        }
+        .left-pattern .left-square {
+          width: 12px;
+          height: 12px;
+          background: linear-gradient(180deg, #ffffff 0%, #f3f4f6 50%, #e6e7e9 100%);
+          box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+          border-radius: 2px;
+          opacity: 0;
+          transform: translateY(6px) scale(0.95);
+          animation: leftSquareFade 0.5s ease-out forwards;
+        }
+        .left-pattern .left-diamond {
+          width: 12px;
+          height: 12px;
+          background: transparent;
+          border: 2px solid #242424ff;
+          box-shadow: none;
+          transform: rotate(45deg) translateY(6px) scale(0.95);
+          border-radius: 2px;
+          opacity: 0;
+          animation: leftSquareFade 0.5s ease-out forwards;
+          box-sizing: border-box;
+        }
       `}</style>
       {/* Logo */}
-      <div style={{
+      {/* <div style={{
         position: 'absolute',
         top: '40px',
         left: '60px',
@@ -196,215 +302,187 @@ const Hero: React.FC = () => {
         animationDelay: '0.5s',
       }} className="animate-fade-in-up">
         steve.
-      </div>
+      </div> */}
 
-      {/* Placeholder text - left side */}
+      {/* Main content - centered in left section */}
       <div style={{
         position: 'absolute',
-        left: '95px',
+        left: '6%',
         top: '60%',
         transform: 'translateY(-50%)',
-        maxWidth: '400px',
+        maxWidth: '480px',
         opacity: 0,
         animationDelay: '1.0s',
+        zIndex: 10,
       }} className="animate-fade-in-left">
         <h2 style={{
-          fontSize: 'clamp(32px, 6vw, 48px)',
-          fontWeight: 200,
+          fontSize: 'clamp(42px, 7vw, 64px)',
+          fontWeight: 150,
           color: '#000000',
-          margin: '0 0 20px 0',
-          lineHeight: '1.2',
-          letterSpacing: '0.05em',
+          margin: '0 0 16px 0',
+          lineHeight: '1.1',
+          letterSpacing: '0.02em',
         }}>
           I'm <br />Steve Alden
         </h2>
         <p style={{
-          fontSize: 'clamp(20px, 2vw, 18px)',
-          fontWeight: 250,
+          fontSize: 'clamp(18px, 2.2vw, 22px)',
+          fontWeight: 150,
           color: '#2b2b2bff',
-          lineHeight: '1.6',
-          margin: 0,
+          lineHeight: '1.5',
+          margin: '0 0 32px 0',
+          letterSpacing: '0.01em',
         }} className={isAnimating ? 'animate-slide-out-right' : 'animate-slide-in-right'}>
           {currentTitle}
         </p>
+        <div style={{
+          fontSize: 'clamp(14px, 1.6vw, 16px)',
+          fontWeight: 300,
+          color: '#555555',
+          lineHeight: '1.7',
+          maxWidth: '420px',
+          opacity: 0,
+          animationDelay: '1.4s',
+        }} className="animate-fade-in-up">
+          
+
+        </div>
       </div>
 
-      {/* Left S-curve line */}
+      {/* Left S-curve line - repositioned */}
       <svg style={{
         position: 'absolute',
-        left: '0px',
+        left: '-20px',
         top: 0,
-        width: '180px',
+        width: '200px',
         height: '150vh',
         overflow: 'hidden',
-        opacity: 0,
+        opacity: 0.15,
         animationDelay: '0.2s',
       }} className="animate-draw-in" viewBox="0 0 150 700" preserveAspectRatio="none">
-        <path d="M -20 0 Q 80 175 -20 350 Q -120 525 -20 700" 
+        <path d="M -20 0 Q 100 200 0 400 Q -100 600 0 700" 
               stroke="#242424ff" 
-              strokeWidth="0.5" 
+              strokeWidth="0.8" 
               fill="none"/>
       </svg>
 
-      {/* Dot grid - top right */}
+      {/* Right side decorative elements - repositioned for white bg */}
+      
+      {/* Large dot grid cluster - top right */}
       <div style={{
         position: 'absolute',
-        top: '15%',
-        right: '12%',
+        top: '22%',
+        right: '8%',
         display: 'grid',
-        gridTemplateColumns: 'repeat(10, 1fr)',
-        gridTemplateRows: 'repeat(6, 1fr)',
-        gap: '12px',
+        gridTemplateColumns: 'repeat(12, 1fr)',
+        gridTemplateRows: 'repeat(8, 1fr)',
+        gap: '14px',
         opacity: 0,
         animationDelay: '0.8s',
       }} className="animate-fade-in-right shape-interactive">
-        {Array.from({length: 60}, (_, i) => (
+        {Array.from({length: 96}, (_, i) => (
           <div key={i} style={{
-            width: '3px',
-            height: '3px',
+            width: '2.5px',
+            height: '2.5px',
             background: '#242424ff',
             borderRadius: '50%',
             opacity: 0,
             animation: `scaleInDot 0.4s ease-out forwards`,
-            animationDelay: `${0.8 + (i * 0.02)}s`,
+            animationDelay: `${0.8 + (i * 0.015)}s`,
           }} />
         ))}
       </div>
 
-      {/* Dot grid - bottom right */}
+      {/* Small accent squares - right side */}
       <div style={{
         position: 'absolute',
-        bottom: '20%',
-        right: '15%',
-        display: 'grid',
-        gridTemplateColumns: 'repeat(8, 1fr)',
-        gridTemplateRows: 'repeat(5, 1fr)',
-        gap: '12px',
+        top: '58%',
+        right: '12%',
+        display: 'flex',
+        gap: '8px',
         opacity: 0,
-        animationDelay: '1.2s',
-      }} className="animate-fade-in-right shape-interactive">
-        {Array.from({length: 40}, (_, i) => (
-          <div key={i} style={{
-            width: '3px',
-            height: '3px',
-            background: '#242424ff',
-            borderRadius: '50%',
-            opacity: 0,
-            animation: `scaleInDot 0.4s ease-out forwards`,
-            animationDelay: `${1.2 + (i * 0.02)}s`,
-          }} />
-        ))}
+        animationDelay: '1.8s',
+      }} className="animate-scale-in shape-interactive">
+        <div style={{
+          width: '18px',
+          height: '18px',
+          border: '1.5px solid #242424ff',
+          transform: 'rotate(45deg)',
+        }} />
+        <div style={{
+          width: '0',
+          height: '0',
+        }} />
       </div>
 
-      {/* Zigzag - top right */}
+      {/* Zigzag - right upper */}
       <svg style={{
         position: 'absolute',
-        top: '40%',
+        top: '48%',
+        right: '18%',
+        opacity: 0,
+        animationDelay: '1.4s',
+        animation: 'fadeInRight 0.8s ease-out forwards',
+      }} className="shape-interactive" width="120" height="60">
+        <polyline points="0,30 30,10 60,30 90,10 120,30" 
+                  stroke="#242424ff" 
+                  strokeWidth="0.7" 
+                  fill="none"/>
+      </svg>
+
+      {/* Small dot grid - bottom right */}
+      <div style={{
+        position: 'absolute',
+        bottom: '18%',
         right: '10%',
+        display: 'grid',
+        gridTemplateColumns: 'repeat(6, 1fr)',
+        gridTemplateRows: 'repeat(4, 1fr)',
+        gap: '10px',
         opacity: 0,
         animationDelay: '1.6s',
+      }} className="animate-fade-in-right shape-interactive">
+        {Array.from({length: 24}, (_, i) => (
+          <div key={i} style={{
+            width: '3px',
+            height: '3px',
+            background: '#242424ff',
+            borderRadius: '50%',
+            opacity: 0,
+            animation: `scaleInDot 0.4s ease-out forwards`,
+            animationDelay: `${1.6 + (i * 0.02)}s`,
+          }} />
+        ))}
+      </div>
+
+      {/* Chevron - center right */}
+      <svg style={{
+        position: 'absolute',
+        top: '70%',
+        right: '28%',
+        opacity: 0,
+        animationDelay: '2.2s',
         animation: 'fadeInRight 0.8s ease-out forwards',
-      }} className="shape-interactive" width="100" height="60">
-        <polyline points="0,30 25,10 50,30 75,10 100,30" 
+      }} className="shape-interactive" width="35" height="24">
+        <polyline points="0,0 17.5,12 35,0" 
                   stroke="#242424ff" 
-                  strokeWidth="0.5" 
+                  strokeWidth="0.7" 
                   fill="none"/>
       </svg>
 
-      {/* Zigzag - bottom middle */}
+      {/* Circle outline - accent */}
       <svg style={{
         position: 'absolute',
-        bottom: '35%',
-        right: '35%',
+        bottom: '25%',
+        right: '22%',
         opacity: 0,
-        animationDelay: '2.0s',
-        animation: 'fadeInRight 0.8s ease-out forwards',
-      }} className="shape-interactive" width="100" height="60">
-        <polyline points="0,30 25,10 50,30 75,10 100,30" 
-                  stroke="#242424ff" 
-                  strokeWidth="0.5" 
-                  fill="none"/>
-      </svg>
-
-      {/* Square - top right */}
-      <div style={{
-        position: 'absolute',
-        top: '55%',
-        right: '5%',
-        width: '18px',
-        height: '18px',
-        border: '2px solid #242424ff',
-        opacity: 0,
-        animationDelay: '2.4s',
-        animation: 'scaleIn 0.6s ease-out forwards',
-      }} className="" />
-
-      {/* Diamonds - right side */}
-      <div style={{
-        position: 'absolute',
-        width: '12px',
-        height: '12px',
-        background: '#242424ff',
-        transform: 'rotate(45deg)',
-        top: '60%',
-        right: '5%',
-        opacity: 0,
-        animationDelay: '2.8s',
-        pointerEvents: 'none',
-      }} className="animate-scale-in" />
-      <div style={{
-        position: 'absolute',
-        width: '12px',
-        height: '12px',
-        background: '#242424ff',
-        transform: 'rotate(45deg)',
-        top: '64%',
-        right: '5%',
-        opacity: 0,
-        animationDelay: '3.0s',
-        pointerEvents: 'none',
-      }} className="animate-scale-in" />
-      <div style={{
-        position: 'absolute',
-        width: '12px',
-        height: '12px',
-        background: '#242424ff',
-        transform: 'rotate(45deg)',
-        top: '68%',
-        right: '5%',
-        opacity: 0,
-        animationDelay: '3.2s',
-        pointerEvents: 'none',
-      }} className="animate-scale-in" />
-
-      {/* Chevron - top right */}
-      <svg style={{
-        position: 'absolute',
-        top: '30%',
-        right: '35%',
-        opacity: 0,
-        animationDelay: '3.6s',
-        animation: 'fadeInRight 0.8s ease-out forwards',
-      }} className="shape-interactive" width="30" height="20">
-        <polyline points="0,0 15,10 30,0" 
-                  stroke="#242424ff" 
-                  strokeWidth="0.5" 
-                  fill="none"/>
-      </svg>
-
-      {/* Chevron - bottom */}
-      <svg style={{
-        position: 'absolute',
-        bottom: '20%',
-        right: '25%',
-        opacity: 0,
-        animationDelay: '4.0s',
-        animation: 'fadeInRight 0.8s ease-out forwards',
-      }} className="shape-interactive" width="30" height="20">
-        <polyline points="0,0 15,10 30,0" 
-                  stroke="#242424ff" 
-                  strokeWidth="0.5" 
-                  fill="none"/>
+        animationDelay: '2.6s',
+        animation: 'scaleIn 0.8s ease-out forwards',
+      }} className="shape-interactive" width="32" height="32">
+        <circle cx="16" cy="16" r="14" 
+                stroke="#242424ff" 
+                strokeWidth="0.7" 
+                fill="none"/>
       </svg>
 
       {/* Main content */}
@@ -471,6 +549,8 @@ const Hero: React.FC = () => {
         </div>
       </div> */}
     </div>
+    <AboutMe />
+    </>
   );
 };
 
