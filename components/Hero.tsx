@@ -5,6 +5,20 @@ import FixedHeader from './FixedHeader'
 const Hero: React.FC = () => {
   const [currentTitle, setCurrentTitle] = useState('A Developer')
   const [isAnimating, setIsAnimating] = useState(false)
+  const [showAboutMe, setShowAboutMe] = useState(false)
+
+  const scrollToAboutMe = () => {
+    setShowAboutMe(true)
+  }
+
+  const handleNavClick = (index: number) => {
+    if (index === 0) {
+      setShowAboutMe(false) // Show Hero
+    } else if (index === 1) {
+      setShowAboutMe(true) // Show AboutMe
+    }
+    // Other indices can be handled later
+  }
 
   useEffect(() => {
     const titles = ['A Developer', 'A Business Owner']
@@ -18,40 +32,74 @@ const Hero: React.FC = () => {
         setCurrentTitle(titles[currentIndex])
         setIsAnimating(false)
       }, 1000) // Half of animation duration
-    }, 12000) // Change every 12 seconds
+    }, 6000) // Change every 12 seconds
 
     return () => clearInterval(interval)
   }, [])
 
   useEffect(() => {
-    let lastScrollY = window.scrollY
+    console.log('🔧 Wheel useEffect running - preventing scroll, enabling section toggle')
+    console.log('Current showAboutMe state:', showAboutMe)
+    
+    let wheelTimeout: NodeJS.Timeout | null = null
+    let isTransitioning = false
 
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY
-      const heroThreshold = 50
-      const aboutThreshold = window.innerHeight * 0.8 // AboutMe starts after Hero height
-
-      // Scrolling down from Hero section
-      if (currentScrollY > lastScrollY && currentScrollY > heroThreshold && currentScrollY < aboutThreshold) {
-        const aboutSection = document.getElementById('about-me')
-        if (aboutSection) {
-          aboutSection.scrollIntoView({ behavior: 'smooth' })
-        }
+    // Prevent default scrolling and use wheel events to toggle sections
+    const handleWheel = (e: WheelEvent) => {
+      console.log('🎡 Wheel event detected! deltaY:', e.deltaY)
+      e.preventDefault() // Prevent actual scrolling
+      
+      if (isTransitioning) {
+        console.log('⏸️ Transition already in progress, ignoring...')
+        return
       }
-      // Scrolling up from AboutMe section
-      else if (currentScrollY < lastScrollY && currentScrollY > aboutThreshold * 0.5) {
-        const heroSection = document.querySelector('.hero-section')
-        if (heroSection) {
-          heroSection.scrollIntoView({ behavior: 'smooth' })
-        }
+      
+      // Clear any existing timeout
+      if (wheelTimeout) {
+        clearTimeout(wheelTimeout)
       }
-
-      lastScrollY = currentScrollY
+      
+      // Debounce wheel events
+      wheelTimeout = setTimeout(() => {
+        if (e.deltaY > 0) {
+          // Scrolling down - show AboutMe
+          if (!showAboutMe) {
+            console.log('📍 Transitioning to AboutMe')
+            isTransitioning = true
+            setShowAboutMe(true)
+            setTimeout(() => {
+              isTransitioning = false
+            }, 1500)
+          } else {
+            console.log('Already showing AboutMe')
+          }
+        } else if (e.deltaY < 0) {
+          // Scrolling up - show Hero
+          if (showAboutMe) {
+            console.log('📍 Transitioning to Hero')
+            isTransitioning = true
+            setShowAboutMe(false)
+            setTimeout(() => {
+              isTransitioning = false
+            }, 1500)
+          } else {
+            console.log('Already showing Hero')
+          }
+        }
+      }, 150) // Debounce delay
     }
 
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+    console.log('Adding wheel event listener...')
+    window.addEventListener('wheel', handleWheel, { passive: false })
+    
+    return () => {
+      console.log('Removing wheel event listener...')
+      window.removeEventListener('wheel', handleWheel)
+      if (wheelTimeout) {
+        clearTimeout(wheelTimeout)
+      }
+    }
+  }, [showAboutMe])
 
   useEffect(() => {
     console.log('🎯 Setting up mouse interaction...')
@@ -120,7 +168,7 @@ const Hero: React.FC = () => {
     const animate = () => {
       shapeStates.forEach((state, htmlShape) => {
         // Lerp (linear interpolation) towards target with fixed speed
-        const lerpSpeed = 0.15 // Adjust this value: lower = slower, higher = faster (0-1 range)
+        const lerpSpeed = 0.05 // Adjust this value: lower = slower, higher = faster (0-1 range)
         
         state.currentX += (state.targetX - state.currentX) * lerpSpeed
         state.currentY += (state.targetY - state.currentY) * lerpSpeed
@@ -143,20 +191,50 @@ const Hero: React.FC = () => {
       cancelAnimationFrame(animationId)
     }
   }, [])
+  
   return (
     <>
-      <FixedHeader />
-      <div className="hero-section" style={{
-      margin: 0,
-      padding: 0,
-      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-      minHeight: '100vh',
-      width: '100vw',
-      overflow: 'hidden',
-      background: 'linear-gradient(to right, #fffaf0ff 0%, #fdfaecff 100%)',
-      position: 'relative', 
-    }}>
+      <FixedHeader isOnAboutMe={showAboutMe} onNavClick={handleNavClick} />
+      <div 
+        className="hero-section" 
+        style={{
+          margin: 0,
+          padding: 0,
+          fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+          minHeight: '100vh',
+          width: '100vw',
+          maxWidth: '100vw',
+          overflow: 'hidden',
+          background: 'linear-gradient(60deg, #ffffff 0%, #ffffffff 80%, #ffe8cbff 100%)',
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          boxSizing: 'border-box',
+          transform: showAboutMe ? 'translateY(-100vh)' : 'translateY(0)',
+          transition: 'transform 1.5s cubic-bezier(0.4, 0.0, 0.2, 1)',
+          zIndex: 10,
+          boxShadow: 'inset 0 30px 60px rgba(0,0,0,0.15), inset 0 -12px 32px rgba(0,0,0,0.15)',
+        }}
+      >
       <style>{`
+        html, body {
+          margin: 0;
+          padding: 0;
+          overflow: hidden;
+          width: 100%;
+          height: 100vh;
+        }
+        
+        /* Hide scrollbars */
+        ::-webkit-scrollbar {
+          display: none;
+        }
+        
+        /* Firefox */
+        html {
+          scrollbar-width: none;
+        }
+        
         @keyframes fadeInUp {
           0% { opacity: 0; transform: translateY(30px); }
           100% { opacity: 1; transform: translateY(0); }
@@ -197,6 +275,18 @@ const Hero: React.FC = () => {
           0% { transform: translateX(-20px); opacity: 0; }
           100% { transform: translateX(0); opacity: 1; }
         }
+        @keyframes portraitReveal {
+          0% { 
+            opacity: 0; 
+            transform: translateX(50px) scale(0.94);
+            filter: grayscale(65%) blur(6px);
+          }
+          100% { 
+            opacity: 1; 
+            transform: translateX(0) scale(1);
+            filter: grayscale(65%) blur(0);
+          }
+        }
         .animate-fade-in-up { animation: fadeInUp 0.8s ease-out forwards; }
         .animate-fade-in-left { animation: fadeInLeft 0.8s ease-out forwards; }
         .animate-fade-in-right { animation: fadeInRight 0.8s ease-out forwards; }
@@ -225,6 +315,7 @@ const Hero: React.FC = () => {
         .animate-draw-in { animation: drawIn 1s ease-out forwards; transform-origin: left; }
         .animate-slide-out-right { animation: slideOutRight 1s ease-out forwards; }
         .animate-slide-in-right { animation: slideInRight 1s ease-out forwards; }
+        .animate-portrait-reveal { animation: portraitReveal 1.8s cubic-bezier(0.4, 0.0, 0.2, 1) forwards; }
         
         .shape-interactive { 
           transform-origin: center;
@@ -288,35 +379,21 @@ const Hero: React.FC = () => {
           box-sizing: border-box;
         }
       `}</style>
-      {/* Logo */}
-      {/* <div style={{
-        position: 'absolute',
-        top: '40px',
-        left: '60px',
-        fontFamily: 'system-ui',
-        fontSize: '24px',
-        fontWeight: 300,
-        letterSpacing: '0.05em',
-        color: '#000000',
-        opacity: 0,
-        animationDelay: '0.5s',
-      }} className="animate-fade-in-up">
-        steve.
-      </div> */}
 
-      {/* Main content - centered in left section */}
+      {/* Left side - Text content */}
       <div style={{
         position: 'absolute',
-        left: '6%',
-        top: '60%',
+        left: '10%',
+        top: '38%',
         transform: 'translateY(-50%)',
-        maxWidth: '480px',
+        maxWidth: '520px',
         opacity: 0,
         animationDelay: '1.0s',
         zIndex: 10,
+        textAlign: 'left',
       }} className="animate-fade-in-left">
         <h2 style={{
-          fontSize: 'clamp(42px, 7vw, 64px)',
+          fontSize: 'clamp(42px, 7vw, 90px)',
           fontWeight: 150,
           color: '#000000',
           margin: '0 0 16px 0',
@@ -349,7 +426,78 @@ const Hero: React.FC = () => {
         </div>
       </div>
 
-      {/* Left S-curve line - repositioned */}
+      {/* Left side vertical text - 2005 BINUS Student */}
+      <div style={{
+        position: 'absolute',
+        left: '3%',
+        top: '15%',
+        transform: 'translateY(-50%)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '20px',
+        opacity: 0,
+        animationDelay: '1.8s',
+        zIndex: 10,
+      }} className="animate-fade-in-left">
+        <p style={{
+          fontSize: 'clamp(10px, 1.2vw, 12px)',
+          fontWeight: 300,
+          color: '#555555',
+          margin: 0,
+          letterSpacing: '0.1em',
+          writingMode: 'vertical-rl',
+          textOrientation: 'mixed',
+          transform: 'rotate(180deg)',
+        }}>
+          BINUS Student
+        </p>
+        <div style={{
+          width: '1px',
+          height: '540px',
+          background: 'linear-gradient(to bottom, transparent, #d0d0d0 20%, #d0d0d0 80%, transparent)',
+        }} />
+        <p style={{
+          fontSize: 'clamp(12px, 1.4vw, 14px)',
+          fontWeight: 300,
+          color: '#555555',
+          margin: 0,
+          letterSpacing: '0.1em',
+          transform: 'rotate(-90deg)',
+        }}>
+          2005
+        </p>
+      </div>
+
+      {/* Right side - Portrait image */}
+      <div style={{
+        position: 'absolute',
+        right: '0',
+        bottom:'0',
+        width: '50%',
+        height: '90vh',
+        opacity: 0,
+        animationDelay: '0.6s',
+        zIndex: 5,
+      }} className="animate-portrait-reveal">
+        <img 
+          src="/SelfPort.png" 
+          alt="Steve Alden - Self Portrait"
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: 'center center',
+            filter: 'grayscale(0%)',
+          }}
+        />
+      </div>
+
+      
+
+      
+
+      {/* Left S-curve line - repositioned
       <svg style={{
         position: 'absolute',
         left: '-20px',
@@ -364,23 +512,48 @@ const Hero: React.FC = () => {
               stroke="#242424ff" 
               strokeWidth="0.8" 
               fill="none"/>
-      </svg>
+      </svg> */}
 
-      {/* Right side decorative elements - repositioned for white bg */}
-      
-      {/* Large dot grid cluster - top right */}
+      {/* Learn More section - appears after 5 seconds */}
       <div style={{
         position: 'absolute',
-        top: '22%',
-        right: '8%',
+        bottom: '3%',
+        left: '45%',
+        textAlign: 'left',
+        opacity: 0,
+        animationDelay: '5s',
+        zIndex: 10,
+        cursor: 'pointer',
+      }} className="animate-fade-in-up" onClick={scrollToAboutMe}>
+        <p style={{
+          fontSize: 'clamp(9px, 1.5vw, 12px)',
+          fontWeight: 200,
+          color: '#242424ff',
+          letterSpacing: '0.08em',
+          margin: '0 0 0px 0',
+          textTransform: 'uppercase',
+        }}>
+          Learn More About Me <span style={{ color: '#000000' }}>🔻</span>
+        </p>
+        
+        
+      </div>
+
+      {/* Decorative elements - better spaced distribution */}
+      
+      {/* Large dot grid cluster - moved to bottom left
+      <div style={{
+        position: 'absolute',
+        bottom: '20%',
+        left: '25%',
         display: 'grid',
-        gridTemplateColumns: 'repeat(12, 1fr)',
-        gridTemplateRows: 'repeat(8, 1fr)',
-        gap: '14px',
+        gridTemplateColumns: 'repeat(6, 1fr)',
+        gridTemplateRows: 'repeat(4, 1fr)',
+        gap: '16px',
         opacity: 0,
         animationDelay: '0.8s',
-      }} className="animate-fade-in-right shape-interactive">
-        {Array.from({length: 96}, (_, i) => (
+      }} className="animate-fade-in-left shape-interactive">
+        {Array.from({length: 24}, (_, i) => (
           <div key={i} style={{
             width: '2.5px',
             height: '2.5px',
@@ -391,58 +564,21 @@ const Hero: React.FC = () => {
             animationDelay: `${0.8 + (i * 0.015)}s`,
           }} />
         ))}
-      </div>
+      </div> */}
 
-      {/* Small accent squares - right side */}
-      <div style={{
+      {/* Circle outline - middle upper area */}
+      {/* <div style={{
         position: 'absolute',
-        top: '58%',
-        right: '12%',
-        display: 'flex',
-        gap: '8px',
-        opacity: 0,
-        animationDelay: '1.8s',
-      }} className="animate-scale-in shape-interactive">
-        <div style={{
-          width: '18px',
-          height: '18px',
-          border: '1.5px solid #242424ff',
-          transform: 'rotate(45deg)',
-        }} />
-        <div style={{
-          width: '0',
-          height: '0',
-        }} />
-      </div>
-
-      {/* Zigzag - right upper */}
-      <svg style={{
-        position: 'absolute',
-        top: '48%',
-        right: '18%',
-        opacity: 0,
-        animationDelay: '1.4s',
-        animation: 'fadeInRight 0.8s ease-out forwards',
-      }} className="shape-interactive" width="120" height="60">
-        <polyline points="0,30 30,10 60,30 90,10 120,30" 
-                  stroke="#242424ff" 
-                  strokeWidth="0.7" 
-                  fill="none"/>
-      </svg>
-
-      {/* Small dot grid - bottom right */}
-      <div style={{
-        position: 'absolute',
-        bottom: '18%',
-        right: '10%',
+        bottom: '12%',
+        left: '42%',
         display: 'grid',
-        gridTemplateColumns: 'repeat(6, 1fr)',
-        gridTemplateRows: 'repeat(4, 1fr)',
-        gap: '10px',
+        gridTemplateColumns: 'repeat(4, 1fr)',
+        gridTemplateRows: 'repeat(3, 1fr)',
+        gap: '12px',
         opacity: 0,
         animationDelay: '1.6s',
-      }} className="animate-fade-in-right shape-interactive">
-        {Array.from({length: 24}, (_, i) => (
+      }} className="animate-fade-in-up shape-interactive">
+        {Array.from({length: 12}, (_, i) => (
           <div key={i} style={{
             width: '3px',
             height: '3px',
@@ -453,103 +589,136 @@ const Hero: React.FC = () => {
             animationDelay: `${1.6 + (i * 0.02)}s`,
           }} />
         ))}
-      </div>
+      </div> */}
 
-      {/* Chevron - center right */}
+      {/* Circle outline - middle upper area */}
       <svg style={{
         position: 'absolute',
-        top: '70%',
-        right: '28%',
-        opacity: 0,
-        animationDelay: '2.2s',
-        animation: 'fadeInRight 0.8s ease-out forwards',
-      }} className="shape-interactive" width="35" height="24">
-        <polyline points="0,0 17.5,12 35,0" 
-                  stroke="#242424ff" 
-                  strokeWidth="0.7" 
-                  fill="none"/>
-      </svg>
-
-      {/* Circle outline - accent */}
-      <svg style={{
-        position: 'absolute',
-        bottom: '25%',
-        right: '22%',
+        top: '20%',
+        left: '48%',
         opacity: 0,
         animationDelay: '2.6s',
-        animation: 'scaleIn 0.8s ease-out forwards',
-      }} className="shape-interactive" width="32" height="32">
-        <circle cx="16" cy="16" r="14" 
+        animation: 'scaleIn 1.6s ease-out forwards',
+      }} className="shape-interactive" width="38" height="38">
+        <circle cx="19" cy="19" r="16" 
                 stroke="#242424ff" 
                 strokeWidth="0.7" 
                 fill="none"/>
       </svg>
 
-      {/* Main content */}
-      {/* <div style={{
-        position: 'relative',
-        zIndex: 10,
-        maxWidth: '1400px',
-        margin: '0 auto',
-        padding: 'clamp(30px, 5vw, 60px) clamp(20px, 6vw, 80px)',
-        minHeight: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}>
-        <div style={{
-          maxWidth: '600px',
-          textAlign: 'center',
-        }}>
-          <h1 style={{
-            fontSize: 'clamp(48px, 10vw, 96px)',
-            fontWeight: 800,
-            color: '#000',
-            margin: '0 0 clamp(20px, 3vw, 30px) 0',
-            lineHeight: '1',
-            letterSpacing: '-2px',
-          }}>
-            Frontend<br />Developer.
-          </h1>
-          
-          <p style={{
-            fontSize: 'clamp(16px, 2vw, 20px)',
-            color: '#333',
-            lineHeight: '1.6',
-            margin: '0 0 clamp(40px, 8vw, 80px) 0',
-            maxWidth: '520px',
-          }}>
-            I like to craft solid and scalable frontend products with great user experiences.
-          </p>
+      {/* Additional shapes with better spacing */}
+      
+      {/* Accent dots - upper middle area */}
+      <div style={{
+        position: 'absolute',
+        top: '28%',
+        left: '42%',
+        display: 'grid',
+        gridTemplateColumns: 'repeat(4, 1fr)',
+        gridTemplateRows: 'repeat(3, 1fr)',
+        gap: '14px',
+        opacity: 0,
+        animationDelay: '1.2s',
+      }} className="animate-fade-in-up shape-interactive">
+        {Array.from({length: 12}, (_, i) => (
+          <div key={i} style={{
+            width: '2px',
+            height: '2px',
+            background: '#242424ff',
+            borderRadius: '50%',
+            opacity: 0,
+            animation: `scaleInDot 0.4s ease-out forwards`,
+            animationDelay: `${1.2 + (i * 0.025)}s`,
+          }} />
+        ))}
+      </div>
 
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: 'clamp(30px, 5vw, 60px)',
-            maxWidth: '700px',
-          }}>
-            <p style={{
-              fontSize: 'clamp(14px, 1.5vw, 16px)',
-              color: '#555',
-              lineHeight: '1.6',
-              margin: 0,
-            }}>
-              Highly skilled at progressive enhancement, design systems & UI Engineering.
-            </p>
-            <p style={{
-              fontSize: 'clamp(14px, 1.5vw, 16px)',
-              color: '#555',
-              lineHeight: '1.6',
-              margin: 0,
-            }}>
-              Proven experience building successful products for clients across several countries.
-            </p>
-          </div>
-        </div>
-      </div> */}
+      {/* Circle accent - middle left area */}
+      {/* <svg style={{
+        position: 'absolute',
+        top: '70%',
+        left: '8%',
+        opacity: 0,
+        animationDelay: '2.0s',
+        animation: 'fadeInLeft 0.8s ease-out forwards',
+      }} className="shape-interactive" width="32" height="32">
+        <circle cx="16" cy="16" r="13" 
+                stroke="#242424ff" 
+                strokeWidth="0.7" 
+                fill="none"/>
+      </svg> */}
+
+      {/* Top zigzag - moved to bottom middle */}
+      {/* <svg style={{
+        position: 'absolute',
+        bottom: '15%',
+        left: '25%',
+        opacity: 0,
+        animationDelay: '1.8s',
+        animation: 'fadeInUp 0.8s ease-out forwards',
+      }} className="shape-interactive" width="80" height="40">
+        <polyline points="0,20 20,8 40,20 60,8 80,20" 
+                  stroke="#242424ff" 
+                  strokeWidth="0.7" 
+                  fill="none"/>
+      </svg> */}
+
+      {/* Additional bottom shapes for better balance */}
+      
+      {/* Bottom right circle */}
+      {/* <svg style={{
+        position: 'absolute',
+        bottom: '18%',
+        left: '45%',
+        opacity: 0,
+        animationDelay: '2.6s',
+        animation: 'scaleIn 0.8s ease-out forwards',
+      }} className="shape-interactive" width="28" height="28">
+        <circle cx="14" cy="14" r="12" 
+                stroke="#242424ff" 
+                strokeWidth="0.7" 
+                fill="none"/>
+      </svg> */}
+
+      {/* Bottom center dots */}
+      <div style={{
+        position: 'absolute',
+        bottom: '10%',
+        left: '55%',
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, 1fr)',
+        gridTemplateRows: 'repeat(2, 1fr)',
+        gap: '8px',
+        opacity: 0,
+        animationDelay: '3.0s',
+      }} className="animate-fade-in-up shape-interactive">
+        {Array.from({length: 6}, (_, i) => (
+          <div key={i} style={{
+            width: '2px',
+            height: '2px',
+            background: '#242424ff',
+            borderRadius: '50%',
+            opacity: 0,
+            animation: `scaleInDot 0.4s ease-out forwards`,
+            animationDelay: `${3.0 + (i * 0.03)}s`,
+          }} />
+        ))}
+      </div>
     </div>
-    <AboutMe />
+    <div 
+      style={{
+        position: 'fixed',
+        top: showAboutMe ? '0' : '100vh',
+        left: 0,
+        width: '100vw',
+        minHeight: '100vh',
+        transition: 'top 1.5s cubic-bezier(0.4, 0.0, 0.2, 1)',
+        zIndex: 20,
+        background: '#fff',
+      }}
+    >
+      <AboutMe isVisible={showAboutMe} />
+    </div>
     </>
   );
 };

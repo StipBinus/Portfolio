@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react'
 
-const FixedHeader: React.FC = () => {
+interface FixedHeaderProps {
+  isOnAboutMe?: boolean
+  onNavClick?: (index: number) => void
+}
+
+const FixedHeader: React.FC<FixedHeaderProps> = ({ isOnAboutMe = false, onNavClick }) => {
   const [isOnHero, setIsOnHero] = useState(true) // Start with true since we begin on hero
   const [activeNav, setActiveNav] = useState<number>(0)
   const [logoKey, setLogoKey] = useState(0) // Key to trigger re-animation
@@ -12,31 +17,28 @@ const FixedHeader: React.FC = () => {
     } else {
       console.log(`⚠️ Already active: ${index}`)
     }
+    if (onNavClick) {
+      onNavClick(index)
+    }
   }
 
   useEffect(() => {
-    const handleScroll = () => {
-      // If we're near the top of the page (within viewport height), show "steve."
-      // Otherwise show "s."
-      const onHero = window.scrollY < window.innerHeight * 0.8
-      
-      if (onHero !== isOnHero) {
-        setIsOnHero(onHero)
-        setLogoKey(prev => prev + 1) // Change key to trigger animation
-      }
-      
-      // Change active nav based on page section
-      if (onHero) {
-        setActiveNav(0) // Hero page - first nav square
-      } else {
-        setActiveNav(1) // About me page - second nav square
-      }
+    // Update logo state based on prop
+    const onHero = !isOnAboutMe
+    
+    if (onHero !== isOnHero) {
+      console.log('Logo state changing:', onHero ? 'steve.' : 's.')
+      setIsOnHero(onHero)
+      setLogoKey(prev => prev + 1) // Change key to trigger animation
     }
-
-    window.addEventListener('scroll', handleScroll)
-    handleScroll() // Check initial state
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [isOnHero])
+    
+    // Change active nav based on page section
+    if (onHero) {
+      setActiveNav(0) // Hero page - first nav square
+    } else {
+      setActiveNav(1) // About me page - second nav square
+    }
+  }, [isOnAboutMe, isOnHero])
 
   return (
     <div style={{
@@ -52,6 +54,7 @@ const FixedHeader: React.FC = () => {
     }}>
       {/* Logo */}
       <div 
+        onClick={() => onNavClick && onNavClick(0)}
         style={{
           position: 'absolute',
           top: '40px',
@@ -64,6 +67,9 @@ const FixedHeader: React.FC = () => {
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
+          opacity: 0,
+          animation: 'fadeInLogo 0.8s ease-out forwards',
+          animationDelay: '0.5s',
         }}
       >
         <span style={{
@@ -180,6 +186,11 @@ const FixedHeader: React.FC = () => {
             clip-path: inset(0 0 0 0);
             opacity: 1;
           }
+        }
+        
+        @keyframes fadeInLogo {
+          0% { opacity: 0; transform: translateY(-8px); }
+          100% { opacity: 1; transform: translateY(0); }
         }
         
         @keyframes scaleInRotate {
