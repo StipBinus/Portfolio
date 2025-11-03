@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react'
 
 interface FixedHeaderProps {
   isOnAboutMe?: boolean
+  isOnProjects?: boolean
   onNavClick?: (index: number) => void
 }
 
-const FixedHeader: React.FC<FixedHeaderProps> = ({ isOnAboutMe = false, onNavClick }) => {
+const FixedHeader: React.FC<FixedHeaderProps> = ({ isOnAboutMe = false, isOnProjects = false, onNavClick }) => {
   const [isOnHero, setIsOnHero] = useState(true) // Start with true since we begin on hero
   const [activeNav, setActiveNav] = useState<number>(0)
   const [logoKey, setLogoKey] = useState(0) // Key to trigger re-animation
@@ -23,22 +24,22 @@ const FixedHeader: React.FC<FixedHeaderProps> = ({ isOnAboutMe = false, onNavCli
   }
 
   useEffect(() => {
-    // Update logo state based on prop
-    const onHero = !isOnAboutMe
-    
+    // Determine hero state and update logo
+    const onHero = !isOnAboutMe && !isOnProjects
     if (onHero !== isOnHero) {
-      console.log('Logo state changing:', onHero ? 'steve.' : 's.')
       setIsOnHero(onHero)
-      setLogoKey(prev => prev + 1) // Change key to trigger animation
+      setLogoKey(prev => prev + 1)
     }
-    
-    // Change active nav based on page section
-    if (onHero) {
-      setActiveNav(0) // Hero page - first nav square
+
+    // Prioritise Projects, then AboutMe, then Hero when deciding the active nav
+    if (isOnProjects) {
+      setActiveNav(2)
+    } else if (isOnAboutMe) {
+      setActiveNav(1)
     } else {
-      setActiveNav(1) // About me page - second nav square
+      setActiveNav(0)
     }
-  }, [isOnAboutMe, isOnHero])
+  }, [isOnAboutMe, isOnProjects])
 
   return (
     <div style={{

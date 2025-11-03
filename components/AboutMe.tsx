@@ -4,27 +4,51 @@ interface AboutMeProps {
   isVisible?: boolean
   /** optional background color when bussines mode is active (e.g. '#f7f7f7') */
   businessBg?: string
+  /** callback to navigate to projects */
+  onNavigateToProjects?: () => void
 }
 
-const AboutMe: React.FC<AboutMeProps> = ({ isVisible = false, businessBg }) => {
+const AboutMe: React.FC<AboutMeProps> = ({ isVisible = false, businessBg, onNavigateToProjects }) => {
   const [shouldAnimate, setShouldAnimate] = useState(false)
   const [activeTop, setActiveTop] = useState<'developer' | 'bussines'>('developer')
+  const [hasBeenVisible, setHasBeenVisible] = useState(false)
 
   useEffect(() => {
+    // Debounce show/hide to avoid flicker when isVisible toggles quickly (e.g. during fast scrolling)
+    let showTimer: ReturnType<typeof setTimeout> | null = null
+    let hideTimer: ReturnType<typeof setTimeout> | null = null
+
     if (isVisible) {
-      // Small delay to ensure the transition has started
-      const timer = setTimeout(() => {
+      // Mark that component has been visible at least once (prevents mode-switch effect from running on mount)
+      if (!hasBeenVisible) {
+        setHasBeenVisible(true)
+      }
+      // Cancel any pending hide and schedule show
+      if (hideTimer) {
+        clearTimeout(hideTimer)
+        hideTimer = null
+      }
+      showTimer = setTimeout(() => {
         setShouldAnimate(true)
       }, 300)
-      return () => clearTimeout(timer)
     } else {
-      // Fade out immediately when navigating away
-      setShouldAnimate(false)
+      // When leaving view, wait a small amount before hiding so brief viewport flickers don't reset the animation
+      hideTimer = setTimeout(() => {
+        setShouldAnimate(false)
+      }, 220)
     }
-    }, [isVisible])
+
+    return () => {
+      if (showTimer) clearTimeout(showTimer)
+      if (hideTimer) clearTimeout(hideTimer)
+    }
+  }, [isVisible, hasBeenVisible])
 
   // Re-trigger animation when switching between developer/business modes
+  // Only run this effect if the component has been visible at least once (avoids flash on mount)
   useEffect(() => {
+    if (!hasBeenVisible) return
+    
     // Fade out current content
     setShouldAnimate(false)
     // Fade in new content after a shorter delay so the transition feels snappier
@@ -32,7 +56,7 @@ const AboutMe: React.FC<AboutMeProps> = ({ isVisible = false, businessBg }) => {
       setShouldAnimate(true)
     }, 350)
     return () => clearTimeout(timer)
-  }, [activeTop])
+  }, [activeTop, hasBeenVisible])
   
   // When in bussines mode and a businessBg is provided, use it; otherwise default to white
   const currentBg = activeTop === 'bussines' && businessBg ? businessBg : '#ffffff'
@@ -142,7 +166,7 @@ const AboutMe: React.FC<AboutMeProps> = ({ isVisible = false, businessBg }) => {
         pointerEvents: activeTop === 'developer' ? 'auto' : 'none',
       }}>
         <img 
-          src="/AboutMe.jpg" 
+          src="Port.jpg" 
           alt="Steve Alden"
           style={{
             width: '100%',
@@ -204,8 +228,31 @@ const AboutMe: React.FC<AboutMeProps> = ({ isVisible = false, businessBg }) => {
             transform: shouldAnimate ? 'translateY(0)' : 'translateY(15px)',
             transition: 'opacity 700ms cubic-bezier(0.4, 0, 0.2, 1) 350ms, transform 700ms cubic-bezier(0.4, 0, 0.2, 1) 350ms',
           }}>
-            I blend strong design intuition with technical skill to identify needs and craft solutions that deliver real value.
+            I pride in my strong design intuition and my ability to identify needs and craft solutions that deliver real value.
           </p>
+          {/* CTA: Check out my work (Developer) */}
+          <div style={{ marginTop: 'clamp(24px, 3vh, 36px)', marginLeft: '-12px' }}>
+            <div
+              onClick={() => {
+                if (onNavigateToProjects) {
+                  onNavigateToProjects()
+                }
+              }}
+              style={{
+                cursor: 'pointer',
+                padding: '12px 20px',
+                fontSize: 'clamp(14px, 1.5vw, 16px)',
+                fontWeight: 500,
+                background: 'transparent',
+                color: '#000000ff',
+                transition: 'transform 220ms ease, box-shadow 220ms ease, opacity 300ms',
+                opacity: shouldAnimate ? 1 : 0,
+                transform: shouldAnimate ? 'translateY(0)' : 'translateY(8px)',
+              }}
+            >
+              Check out my work →
+            </div>
+          </div>
         </div>
 
       {/* Bussines Mode - Portfolio Grid Layout (kept mounted so we can animate in/out) */}

@@ -1,23 +1,26 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import AboutMe from './AboutMe'
 import FixedHeader from './FixedHeader'
+import Projects from './Projects'
 
 const Hero: React.FC = () => {
   const [currentTitle, setCurrentTitle] = useState('A Developer')
   const [isAnimating, setIsAnimating] = useState(false)
-  const [showAboutMe, setShowAboutMe] = useState(false)
+  // section: 0 = Hero, 1 = AboutMe, 2 = Projects
+  const [section, setSection] = useState<number>(0)
+  const isTransitioning = useRef(false)
 
   const scrollToAboutMe = () => {
-    setShowAboutMe(true)
+    setSection(1)
   }
 
   const handleNavClick = (index: number) => {
-    if (index === 0) {
-      setShowAboutMe(false) // Show Hero
-    } else if (index === 1) {
-      setShowAboutMe(true) // Show AboutMe
-    }
-    // Other indices can be handled later
+    // Allow nav clicks to immediately change section; block wheel input briefly
+    setSection(Math.max(0, Math.min(2, index)))
+    isTransitioning.current = true
+    setTimeout(() => {
+      isTransitioning.current = false
+    }, 1400)
   }
 
   useEffect(() => {
@@ -38,68 +41,48 @@ const Hero: React.FC = () => {
   }, [])
 
   useEffect(() => {
-    console.log('🔧 Wheel useEffect running - preventing scroll, enabling section toggle')
-    console.log('Current showAboutMe state:', showAboutMe)
-    
-    let wheelTimeout: NodeJS.Timeout | null = null
-    let isTransitioning = false
+    // Replace separate boolean states with a single section index for predictable transitions.
+    const transitionMs = 1400
+    let wheelDebounce: ReturnType<typeof setTimeout> | null = null
 
-    // Prevent default scrolling and use wheel events to toggle sections
     const handleWheel = (e: WheelEvent) => {
-      console.log('🎡 Wheel event detected! deltaY:', e.deltaY)
-      e.preventDefault() // Prevent actual scrolling
-      
-      if (isTransitioning) {
-        console.log('⏸️ Transition already in progress, ignoring...')
-        return
-      }
-      
-      // Clear any existing timeout
-      if (wheelTimeout) {
-        clearTimeout(wheelTimeout)
-      }
-      
-      // Debounce wheel events
-      wheelTimeout = setTimeout(() => {
-        if (e.deltaY > 0) {
-          // Scrolling down - show AboutMe
-          if (!showAboutMe) {
-            console.log('📍 Transitioning to AboutMe')
-            isTransitioning = true
-            setShowAboutMe(true)
-            setTimeout(() => {
-              isTransitioning = false
-            }, 1500)
-          } else {
-            console.log('Already showing AboutMe')
-          }
-        } else if (e.deltaY < 0) {
-          // Scrolling up - show Hero
-          if (showAboutMe) {
-            console.log('📍 Transitioning to Hero')
-            isTransitioning = true
-            setShowAboutMe(false)
-            setTimeout(() => {
-              isTransitioning = false
-            }, 1500)
-          } else {
-            console.log('Already showing Hero')
-          }
+      e.preventDefault()
+      if (isTransitioning.current) return
+
+      // Debounce to avoid multiple rapid triggers
+      if (wheelDebounce) clearTimeout(wheelDebounce)
+      wheelDebounce = setTimeout(() => {
+        const delta = e.deltaY
+        if (delta > 0) {
+          // scroll down
+          setSection(prev => {
+            const next = Math.min(2, prev + 1)
+            if (next !== prev) {
+              isTransitioning.current = true
+              setTimeout(() => { isTransitioning.current = false }, transitionMs)
+            }
+            return next
+          })
+        } else if (delta < 0) {
+          // scroll up
+          setSection(prev => {
+            const next = Math.max(0, prev - 1)
+            if (next !== prev) {
+              isTransitioning.current = true
+              setTimeout(() => { isTransitioning.current = false }, transitionMs)
+            }
+            return next
+          })
         }
-      }, 150) // Debounce delay
+      }, 120)
     }
 
-    console.log('Adding wheel event listener...')
     window.addEventListener('wheel', handleWheel, { passive: false })
-    
     return () => {
-      console.log('Removing wheel event listener...')
       window.removeEventListener('wheel', handleWheel)
-      if (wheelTimeout) {
-        clearTimeout(wheelTimeout)
-      }
+      if (wheelDebounce) clearTimeout(wheelDebounce)
     }
-  }, [showAboutMe])
+  }, [])
 
   useEffect(() => {
     console.log('🎯 Setting up mouse interaction...')
@@ -194,24 +177,23 @@ const Hero: React.FC = () => {
   
   return (
     <>
-      <FixedHeader isOnAboutMe={showAboutMe} onNavClick={handleNavClick} />
+      <FixedHeader isOnAboutMe={section === 1} isOnProjects={section === 2} onNavClick={handleNavClick} />
       <div 
         className="hero-section" 
         style={{
+          position: 'fixed',
+          top: section === 0 ? '0' : '-100vh',
+          left: 0,
+          width: '100vw',
+          maxWidth: '100vw',
+          minHeight: '100vh',
           margin: 0,
           padding: 0,
           fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-          minHeight: '100vh',
-          width: '100vw',
-          maxWidth: '100vw',
           overflow: 'hidden',
           background: 'linear-gradient(60deg, #ffffff 0%, #ffffffff 80%, #ffe8cbff 100%)',
-          position: 'fixed',
-          top: 0,
-          left: 0,
           boxSizing: 'border-box',
-          transform: showAboutMe ? 'translateY(-100vh)' : 'translateY(0)',
-          transition: 'transform 1.5s cubic-bezier(0.4, 0.0, 0.2, 1)',
+          transition: 'top 1.5s cubic-bezier(0.4, 0.0, 0.2, 1)',
           zIndex: 10,
           boxShadow: 'inset 0 30px 60px rgba(0,0,0,0.15), inset 0 -12px 32px rgba(0,0,0,0.15)',
         }}
@@ -705,19 +687,45 @@ const Hero: React.FC = () => {
         ))}
       </div>
     </div>
+    
+    {/* AboutMe Container */}
     <div 
       style={{
         position: 'fixed',
-        top: showAboutMe ? '0' : '100vh',
+        top: section === 1 ? '0' : section === 2 ? '-100vh' : '100vh',
         left: 0,
         width: '100vw',
         minHeight: '100vh',
         transition: 'top 1.5s cubic-bezier(0.4, 0.0, 0.2, 1)',
         zIndex: 20,
         background: '#fff',
+        overflow: 'hidden',
       }}
     >
-      <AboutMe isVisible={showAboutMe} />
+      <AboutMe 
+        isVisible={section === 1}
+        onNavigateToProjects={() => {
+          // Move to Projects section
+          setSection(2)
+        }}
+      />
+    </div>
+
+    {/* Projects Container */}
+    <div 
+      style={{
+        position: 'fixed',
+        top: section === 2 ? '0' : '100vh',
+        left: 0,
+        width: '100vw',
+        minHeight: '100vh',
+        transition: 'top 1.5s cubic-bezier(0.4, 0.0, 0.2, 1)',
+        zIndex: 30,
+        background: '#f9fafb',
+        overflow: 'hidden',
+      }}
+    >
+      <Projects isVisible={section === 2} />
     </div>
     </>
   );
