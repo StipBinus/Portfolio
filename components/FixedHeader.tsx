@@ -3,10 +3,11 @@ import React, { useState, useEffect } from 'react'
 interface FixedHeaderProps {
   isOnAboutMe?: boolean
   isOnProjects?: boolean
+  isOnContact?: boolean
   onNavClick?: (index: number) => void
 }
 
-const FixedHeader: React.FC<FixedHeaderProps> = ({ isOnAboutMe = false, isOnProjects = false, onNavClick }) => {
+const FixedHeader: React.FC<FixedHeaderProps> = ({ isOnAboutMe = false, isOnProjects = false, isOnContact = false, onNavClick }) => {
   const [isOnHero, setIsOnHero] = useState(true) // Start with true since we begin on hero
   const [activeNav, setActiveNav] = useState<number>(0)
   const [logoKey, setLogoKey] = useState(0) // Key to trigger re-animation
@@ -25,21 +26,23 @@ const FixedHeader: React.FC<FixedHeaderProps> = ({ isOnAboutMe = false, isOnProj
 
   useEffect(() => {
     // Determine hero state and update logo
-    const onHero = !isOnAboutMe && !isOnProjects
+    const onHero = !isOnAboutMe && !isOnProjects && !isOnContact
     if (onHero !== isOnHero) {
       setIsOnHero(onHero)
       setLogoKey(prev => prev + 1)
     }
 
-    // Prioritise Projects, then AboutMe, then Hero when deciding the active nav
-    if (isOnProjects) {
+    // Prioritise Contact, then Projects, then AboutMe, then Hero when deciding the active nav
+    if (isOnContact) {
+      setActiveNav(3)
+    } else if (isOnProjects) {
       setActiveNav(2)
     } else if (isOnAboutMe) {
       setActiveNav(1)
     } else {
       setActiveNav(0)
     }
-  }, [isOnAboutMe, isOnProjects])
+  }, [isOnAboutMe, isOnProjects, isOnContact])
 
   return (
     <div style={{

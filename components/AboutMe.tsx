@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+﻿import React, { useState, useEffect } from 'react'
 
 interface AboutMeProps {
   isVisible?: boolean
@@ -126,10 +126,10 @@ const AboutMe: React.FC<AboutMeProps> = ({ isVisible = false, businessBg, onNavi
       <div
         style={{
           position: 'absolute',
-          top: '15%',
+          top: 'clamp(12%, 15vh, 18%)',
           right: 0,
-          width: 'clamp(600px, 30vw, 500px)',
-          height: 'clamp(200px, 18vh, 220px)',
+          width: 'clamp(400px, 28vw, 480px)',
+          height: 'clamp(160px, 16vh, 200px)',
           objectPosition: 'center 30%',
           filter: 'brightness(0.85) saturate(1)',
           opacity: (activeTop === 'developer' && shouldAnimate) ? 0.92 : 0,
@@ -154,15 +154,15 @@ const AboutMe: React.FC<AboutMeProps> = ({ isVisible = false, businessBg, onNavi
       {/* Main Photo - Left anchored to bottom - visible in developer mode (kept mounted for animation) */}
       <div style={{
         position: 'absolute',
-        left: 'clamp(60px, 8vw, 120px)',
+        left: 'clamp(40px, 6vw, 100px)',
         bottom: 0,
-        width: 'clamp(280px, 26vw, 380px)',
-        height: 'clamp(800px, 72vh, 880px)',
+        width: 'clamp(240px, 24vw, 360px)',
+        height: 'clamp(600px, 68vh, 820px)',
         overflow: 'hidden',
         opacity: (activeTop === 'developer' && shouldAnimate) ? 1 : 0,
         transform: (activeTop === 'developer' && shouldAnimate) ? 'translateY(0)' : 'translateY(30px)',
   transition: 'opacity 700ms cubic-bezier(0.4, 0, 0.2, 1), transform 700ms cubic-bezier(0.4, 0, 0.2, 1)',
-        boxShadow: '0 10px 40px rgba(0,0,0,0.06)',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.06)',
         pointerEvents: activeTop === 'developer' ? 'auto' : 'none',
       }}>
         <img 
@@ -181,11 +181,11 @@ const AboutMe: React.FC<AboutMeProps> = ({ isVisible = false, businessBg, onNavi
       {/* Content Area - Developer mode (kept mounted so we can animate out) */}
       <div style={{
         position: 'absolute',
-        left: 'clamp(420px, 42vw, 580px)',
+        left: 'clamp(380px, 40vw, 580px)',
         top: '50%',
         transform: 'translateY(-50%)',
-        maxWidth: 'clamp(460px, 42vw, 620px)',
-        paddingRight: 'clamp(50px, 6vw, 100px)',
+        maxWidth: 'clamp(400px, 40vw, 600px)',
+        paddingRight: 'clamp(40px, 5vw, 80px)',
         opacity: (activeTop === 'developer' && shouldAnimate) ? 1 : 0,
         transformOrigin: 'top left',
   transition: 'opacity 700ms cubic-bezier(0.4, 0, 0.2, 1)',
@@ -215,10 +215,10 @@ const AboutMe: React.FC<AboutMeProps> = ({ isVisible = false, businessBg, onNavi
             transform: shouldAnimate ? 'translateY(0)' : 'translateY(15px)',
             transition: 'opacity 700ms cubic-bezier(0.4, 0, 0.2, 1) 200ms, transform 700ms cubic-bezier(0.4, 0, 0.2, 1) 200ms',
           }}>
-             I excel in building software that solves bussines problems.
+            Software Engineer seeking internship opportunities
           </h1>
           <p style={{
-            fontSize: 'clamp(16px, 1.8vw, 24px)',
+            fontSize: 'clamp(14px, 1.6vw, 20px)',
             fontWeight: 300,
             color: '#555555',
             lineHeight: '1.7',
@@ -228,7 +228,7 @@ const AboutMe: React.FC<AboutMeProps> = ({ isVisible = false, businessBg, onNavi
             transform: shouldAnimate ? 'translateY(0)' : 'translateY(15px)',
             transition: 'opacity 700ms cubic-bezier(0.4, 0, 0.2, 1) 350ms, transform 700ms cubic-bezier(0.4, 0, 0.2, 1) 350ms',
           }}>
-            I pride in my strong design intuition and my ability to identify needs and craft solutions that deliver real value.
+            I build thoughtful, user-focused experiences. I enjoy collaborating with teams, learning from feedback, and shipping polished work. Open to internship roles where I can grow my skills and contribute meaningfully.
           </p>
           {/* CTA: Check out my work (Developer) */}
           <div style={{ marginTop: 'clamp(24px, 3vh, 36px)', marginLeft: '-12px' }}>
@@ -259,14 +259,14 @@ const AboutMe: React.FC<AboutMeProps> = ({ isVisible = false, businessBg, onNavi
       <div style={{
         position: 'absolute',
         left: '50%',
-        top: '45%',
+        top: '50%',
         transform: 'translate(-50%, -50%)',
-        width: '85vw',
+        width: 'clamp(75vw, 85vw, 90vw)',
         maxWidth: '1100px',
         display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
-        gap: 'clamp(60px, 8vw, 120px)',
-        padding: 'clamp(40px, 5vw, 80px) 0',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(clamp(280px, 40vw, 450px), 1fr))',
+        gap: 'clamp(40px, 6vw, 100px)',
+        padding: 'clamp(30px, 4vw, 60px) 0',
         alignItems: 'center',
         opacity: (activeTop === 'bussines' && shouldAnimate) ? 1 : 0,
         transition: 'opacity 700ms cubic-bezier(0.4, 0, 0.2, 1)',
@@ -284,7 +284,7 @@ const AboutMe: React.FC<AboutMeProps> = ({ isVisible = false, businessBg, onNavi
             {/* SURF Image - Landscape */}
             <div style={{
               width: '100%',
-              height: 'clamp(180px, 24vh, 260px)',
+              height: 'clamp(140px, 20vh, 220px)',
               overflow: 'hidden',
               background: '#ffffffff',
             }}>
@@ -333,9 +333,9 @@ const AboutMe: React.FC<AboutMeProps> = ({ isVisible = false, businessBg, onNavi
           {/* Item 2 - DREAM (Right side with text on left, image on right) */}
           <div style={{
             display: 'flex',
-            gap: 'clamp(24px, 3.5vw, 50px)',
+            gap: 'clamp(20px, 3vw, 40px)',
             alignItems: 'flex-start',
-            paddingTop: 'clamp(120px, 5vh, 70px)',
+            paddingTop: 'clamp(60px, 4vh, 40px)',
             opacity: shouldAnimate ? 1 : 0,
             transform: shouldAnimate ? 'translateY(0)' : 'translateY(30px)',
             transition: 'opacity 700ms cubic-bezier(0.4, 0, 0.2, 1) 350ms, transform 700ms cubic-bezier(0.4, 0, 0.2, 1) 350ms',
@@ -371,8 +371,8 @@ const AboutMe: React.FC<AboutMeProps> = ({ isVisible = false, businessBg, onNavi
             </div>
             {/* DREAM Image - Portrait on the right */}
             <div style={{
-              width: 'clamp(180px, 18vw, 240px)',
-              height: 'clamp(400px, 32vh, 480px)',
+              width: 'clamp(140px, 16vw, 220px)',
+              height: 'clamp(300px, 28vh, 420px)',
               overflow: 'hidden',
               background: '#f5f5f5',
               flexShrink: 0,

@@ -2,11 +2,12 @@ import React, { useState, useEffect, useRef } from 'react'
 import AboutMe from './AboutMe'
 import FixedHeader from './FixedHeader'
 import Projects from './Projects'
+import Contact from './Contact'
 
 const Hero: React.FC = () => {
   const [currentTitle, setCurrentTitle] = useState('A Developer')
   const [isAnimating, setIsAnimating] = useState(false)
-  // section: 0 = Hero, 1 = AboutMe, 2 = Projects
+  // section: 0 = Hero, 1 = AboutMe, 2 = Projects, 3 = Contact
   const [section, setSection] = useState<number>(0)
   const isTransitioning = useRef(false)
 
@@ -16,7 +17,7 @@ const Hero: React.FC = () => {
 
   const handleNavClick = (index: number) => {
     // Allow nav clicks to immediately change section; block wheel input briefly
-    setSection(Math.max(0, Math.min(2, index)))
+    setSection(Math.max(0, Math.min(3, index)))
     isTransitioning.current = true
     setTimeout(() => {
       isTransitioning.current = false
@@ -56,7 +57,7 @@ const Hero: React.FC = () => {
         if (delta > 0) {
           // scroll down
           setSection(prev => {
-            const next = Math.min(2, prev + 1)
+            const next = Math.min(3, prev + 1)
             if (next !== prev) {
               isTransitioning.current = true
               setTimeout(() => { isTransitioning.current = false }, transitionMs)
@@ -177,7 +178,7 @@ const Hero: React.FC = () => {
   
   return (
     <>
-      <FixedHeader isOnAboutMe={section === 1} isOnProjects={section === 2} onNavClick={handleNavClick} />
+      <FixedHeader isOnAboutMe={section === 1} isOnProjects={section === 2} isOnContact={section === 3} onNavClick={handleNavClick} />
       <div 
         className="hero-section" 
         style={{
@@ -715,7 +716,7 @@ const Hero: React.FC = () => {
     <div 
       style={{
         position: 'fixed',
-        top: section === 2 ? '0' : '100vh',
+        top: section === 2 ? '0' : section === 3 ? '-100vh' : '100vh',
         left: 0,
         width: '100vw',
         minHeight: '100vh',
@@ -726,6 +727,23 @@ const Hero: React.FC = () => {
       }}
     >
       <Projects isVisible={section === 2} />
+    </div>
+
+    {/* Contact Section */}
+    <div
+      style={{
+        position: 'fixed',
+        top: section === 3 ? '0' : '100vh',
+        left: 0,
+        width: '100vw',
+        minHeight: '100vh',
+        transition: 'top 1.5s cubic-bezier(0.4, 0.0, 0.2, 1)',
+        zIndex: 40,
+        background: '#ffffff',
+        overflow: 'hidden',
+      }}
+    >
+      <Contact isVisible={section === 3} />
     </div>
     </>
   );
