@@ -85,6 +85,26 @@ const AboutMe: React.FC<AboutMeProps> = ({ isVisible = false, businessBg, onNavi
         .top-btn-label { font-size: clamp(12px, 1.3vw, 15px); font-weight: 400; letter-spacing: 0.12em; text-transform: uppercase; transition: color 500ms ease; }
   .top-underline { position: absolute; left: 0; right: 0; bottom: -5px; height: 1.5px; background: #000; transform: scaleX(0); transform-origin: center; transition: transform 700ms cubic-bezier(0.2,0.8,0.2,1), background 500ms ease; }
         .top-btn[data-active="true"] .top-underline { transform: scaleX(1); }
+        
+        /* Mobile responsive - hide images and center content */
+        @media (max-width: 768px) {
+          .about-me-photo,
+          .about-me-accent-image {
+            display: none !important;
+          }
+          
+          .about-me-content {
+            left: 50% !important;
+            transform: translateX(-50%) translateY(-50%) !important;
+            text-align: center !important;
+            padding: 0 clamp(20px, 5vw, 40px) !important;
+            max-width: 90vw !important;
+          }
+          
+          .business-grid-item img {
+            max-height: clamp(120px, 20vh, 180px) !important;
+          }
+        }
       `}</style>
       
       <div style={{
@@ -124,6 +144,7 @@ const AboutMe: React.FC<AboutMeProps> = ({ isVisible = false, businessBg, onNavi
 
       {/* Top Right Accent Image - visible in developer mode (kept mounted for animations) */}
       <div
+        className="about-me-accent-image"
         style={{
           position: 'absolute',
           top: 'clamp(12%, 15vh, 18%)',
@@ -152,7 +173,9 @@ const AboutMe: React.FC<AboutMeProps> = ({ isVisible = false, businessBg, onNavi
       </div>
 
       {/* Main Photo - Left anchored to bottom - visible in developer mode (kept mounted for animation) */}
-      <div style={{
+      <div 
+        className="about-me-photo"
+        style={{
         position: 'absolute',
         left: 'clamp(40px, 6vw, 100px)',
         bottom: 0,
@@ -179,7 +202,9 @@ const AboutMe: React.FC<AboutMeProps> = ({ isVisible = false, businessBg, onNavi
       </div>
 
       {/* Content Area - Developer mode (kept mounted so we can animate out) */}
-      <div style={{
+      <div 
+        className="about-me-content"
+        style={{
         position: 'absolute',
         left: 'clamp(380px, 40vw, 580px)',
         top: '50%',

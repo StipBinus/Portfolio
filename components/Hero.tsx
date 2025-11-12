@@ -45,6 +45,8 @@ const Hero: React.FC = () => {
     // Replace separate boolean states with a single section index for predictable transitions.
     const transitionMs = 1400
     let wheelDebounce: ReturnType<typeof setTimeout> | null = null
+    let touchStartY = 0
+    let touchEndY = 0
 
     const handleWheel = (e: WheelEvent) => {
       e.preventDefault()
@@ -78,9 +80,58 @@ const Hero: React.FC = () => {
       }, 120)
     }
 
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStartY = e.touches[0].clientY
+    }
+
+    const handleTouchMove = (e: TouchEvent) => {
+      touchEndY = e.touches[0].clientY
+    }
+
+    const handleTouchEnd = () => {
+      if (isTransitioning.current) return
+      
+      const swipeDistance = touchStartY - touchEndY
+      const minSwipeDistance = 50 // Minimum distance for a valid swipe
+
+      if (Math.abs(swipeDistance) > minSwipeDistance) {
+        if (swipeDistance > 0) {
+          // Swiped up - scroll down
+          setSection(prev => {
+            const next = Math.min(3, prev + 1)
+            if (next !== prev) {
+              isTransitioning.current = true
+              setTimeout(() => { isTransitioning.current = false }, transitionMs)
+            }
+            return next
+          })
+        } else {
+          // Swiped down - scroll up
+          setSection(prev => {
+            const next = Math.max(0, prev - 1)
+            if (next !== prev) {
+              isTransitioning.current = true
+              setTimeout(() => { isTransitioning.current = false }, transitionMs)
+            }
+            return next
+          })
+        }
+      }
+
+      touchStartY = 0
+      touchEndY = 0
+    }
+
     window.addEventListener('wheel', handleWheel, { passive: false })
+    window.addEventListener('touchstart', handleTouchStart, { passive: true })
+    window.addEventListener('touchmove', handleTouchMove, { passive: true })
+    window.addEventListener('touchend', handleTouchEnd, { passive: true })
+
     return () => {
       window.removeEventListener('wheel', handleWheel)
+      window.removeEventListener('touchstart', handleTouchStart)
+      window.removeEventListener('touchmove', handleTouchMove)
+      window.removeEventListener('touchend', handleTouchEnd)
       if (wheelDebounce) clearTimeout(wheelDebounce)
     }
   }, [])
@@ -330,18 +381,18 @@ const Hero: React.FC = () => {
           top: 0;
           height: 100vh;
           display: grid;
-          grid-template-columns: repeat(12, 14px);
-          grid-auto-rows: 14px;
-          gap: 6px;
-          width: 240px;
-          padding: 24px 12px;
+          grid-template-columns: repeat(12, clamp(10px, 1.8vw, 14px));
+          grid-auto-rows: clamp(10px, 1.8vw, 14px);
+          gap: clamp(4px, 0.8vw, 6px);
+          width: clamp(120px, 20vw, 240px);
+          padding: clamp(16px, 3vh, 24px) clamp(8px, 1.5vw, 12px);
           opacity: 0.12;
           pointer-events: none;
           z-index: 1;
         }
         .left-pattern .left-square {
-          width: 12px;
-          height: 12px;
+          width: clamp(8px, 1.5vw, 12px);
+          height: clamp(8px, 1.5vw, 12px);
           background: linear-gradient(180deg, #ffffff 0%, #f3f4f6 50%, #e6e7e9 100%);
           box-shadow: 0 2px 6px rgba(0,0,0,0.06);
           border-radius: 2px;
@@ -350,8 +401,8 @@ const Hero: React.FC = () => {
           animation: leftSquareFade 0.5s ease-out forwards;
         }
         .left-pattern .left-diamond {
-          width: 12px;
-          height: 12px;
+          width: clamp(8px, 1.5vw, 12px);
+          height: clamp(8px, 1.5vw, 12px);
           background: transparent;
           border: 2px solid #242424ff;
           box-shadow: none;
@@ -361,46 +412,76 @@ const Hero: React.FC = () => {
           animation: leftSquareFade 0.5s ease-out forwards;
           box-sizing: border-box;
         }
+        
+        /* Mobile responsive - hide images and adjust layout */
+        @media (max-width: 768px) {
+          .hero-portrait {
+            display: none !important;
+          }
+          
+          .hero-side-text {
+            display: none !important;
+          }
+          
+          .hero-text-content {
+            left: 50% !important;
+            top: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            text-align: center !important;
+            max-width: 90vw !important;
+          }
+          
+          .hero-learn-more {
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            text-align: center !important;
+          }
+          
+          .left-pattern {
+            display: none !important;
+          }
+        }
       `}</style>
 
       {/* Left side - Text content */}
       <div style={{
         position: 'absolute',
-        left: '10%',
+        left: 'clamp(5%, 10vw, 10%)',
         top: '38%',
         transform: 'translateY(-50%)',
-        maxWidth: '520px',
+        maxWidth: 'clamp(280px, 90vw, 520px)',
         opacity: 0,
         animationDelay: '1.0s',
         zIndex: 10,
         textAlign: 'left',
-      }} className="animate-fade-in-left">
+        padding: '0 clamp(8px, 2vw, 16px)',
+      }} className="animate-fade-in-left hero-text-content">
         <h2 style={{
-          fontSize: 'clamp(42px, 7vw, 90px)',
+          fontSize: 'clamp(28px, 7vw, 90px)',
           fontWeight: 150,
           color: '#000000',
-          margin: '0 0 16px 0',
+          margin: '0 0 clamp(8px, 2vh, 16px) 0',
           lineHeight: '1.1',
           letterSpacing: '0.02em',
         }}>
           I'm <br />Steve Alden
         </h2>
         <p style={{
-          fontSize: 'clamp(18px, 2.2vw, 22px)',
+          fontSize: 'clamp(14px, 2.2vw, 22px)',
           fontWeight: 150,
           color: '#2b2b2bff',
           lineHeight: '1.5',
-          margin: '0 0 32px 0',
+          margin: '0 0 clamp(12px, 4vh, 32px) 0',
           letterSpacing: '0.01em',
         }} className={isAnimating ? 'animate-slide-out-right' : 'animate-slide-in-right'}>
           {currentTitle}
         </p>
         <div style={{
-          fontSize: 'clamp(14px, 1.6vw, 16px)',
+          fontSize: 'clamp(11px, 1.6vw, 16px)',
           fontWeight: 300,
           color: '#555555',
           lineHeight: '1.7',
-          maxWidth: '420px',
+          maxWidth: 'clamp(260px, 85vw, 420px)',
           opacity: 0,
           animationDelay: '1.4s',
         }} className="animate-fade-in-up">
@@ -412,19 +493,19 @@ const Hero: React.FC = () => {
       {/* Left side vertical text - 2005 BINUS Student */}
       <div style={{
         position: 'absolute',
-        left: '3%',
+        left: 'clamp(2%, 3vw, 3%)',
         top: '15%',
         transform: 'translateY(-50%)',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: '20px',
+        gap: 'clamp(12px, 2vh, 20px)',
         opacity: 0,
         animationDelay: '1.8s',
         zIndex: 10,
-      }} className="animate-fade-in-left">
+      }} className="animate-fade-in-left hero-side-text">
         <p style={{
-          fontSize: 'clamp(10px, 1.2vw, 12px)',
+          fontSize: 'clamp(8px, 1.2vw, 12px)',
           fontWeight: 300,
           color: '#555555',
           margin: 0,
@@ -437,11 +518,11 @@ const Hero: React.FC = () => {
         </p>
         <div style={{
           width: '1px',
-          height: '540px',
+          height: 'clamp(280px, 50vh, 540px)',
           background: 'linear-gradient(to bottom, transparent, #d0d0d0 20%, #d0d0d0 80%, transparent)',
         }} />
         <p style={{
-          fontSize: 'clamp(12px, 1.4vw, 14px)',
+          fontSize: 'clamp(10px, 1.4vw, 14px)',
           fontWeight: 300,
           color: '#555555',
           margin: 0,
@@ -457,20 +538,20 @@ const Hero: React.FC = () => {
         position: 'absolute',
         right: '0',
         bottom:'0',
-        width: '50%',
-        height: '90vh',
+        width: 'clamp(45%, 50vw, 55%)',
+        height: '100vh',
         opacity: 0,
         animationDelay: '0.6s',
         zIndex: 5,
-      }} className="animate-portrait-reveal">
+      }} className="animate-portrait-reveal hero-portrait">
         <img 
           src="/SelfPort.png" 
           alt="Steve Alden - Self Portrait"
           style={{
             width: '100%',
             height: '100%',
-            objectFit: 'cover',
-            objectPosition: 'center center',
+            objectFit: 'contain',
+            objectPosition: 'center bottom',
             filter: 'grayscale(0%)',
           }}
         />
@@ -500,16 +581,16 @@ const Hero: React.FC = () => {
       {/* Learn More section - appears after 5 seconds */}
       <div style={{
         position: 'absolute',
-        bottom: '3%',
-        left: '45%',
+        bottom: 'clamp(5%, 6vh, 3%)',
+        left: 'clamp(40%, 45vw, 45%)',
         textAlign: 'left',
         opacity: 0,
         animationDelay: '5s',
         zIndex: 10,
         cursor: 'pointer',
-      }} className="animate-fade-in-up" onClick={scrollToAboutMe}>
+      }} className="animate-fade-in-up hero-learn-more" onClick={scrollToAboutMe}>
         <p style={{
-          fontSize: 'clamp(9px, 1.5vw, 12px)',
+          fontSize: 'clamp(8px, 1.5vw, 12px)',
           fontWeight: 200,
           color: '#242424ff',
           letterSpacing: '0.08em',
@@ -582,7 +663,8 @@ const Hero: React.FC = () => {
         opacity: 0,
         animationDelay: '2.6s',
         animation: 'scaleIn 1.6s ease-out forwards',
-      }} className="shape-interactive" width="38" height="38">
+        display: 'clamp(0, calc(100vw - 600px), 1) > 0 ? block : none',
+      }} className="shape-interactive" width="clamp(24, 5vw, 38)" height="clamp(24, 5vw, 38)">
         <circle cx="19" cy="19" r="16" 
                 stroke="#242424ff" 
                 strokeWidth="0.7" 
@@ -599,14 +681,14 @@ const Hero: React.FC = () => {
         display: 'grid',
         gridTemplateColumns: 'repeat(4, 1fr)',
         gridTemplateRows: 'repeat(3, 1fr)',
-        gap: '14px',
+        gap: 'clamp(8px, 1.8vw, 14px)',
         opacity: 0,
         animationDelay: '1.2s',
       }} className="animate-fade-in-up shape-interactive">
         {Array.from({length: 12}, (_, i) => (
           <div key={i} style={{
-            width: '2px',
-            height: '2px',
+            width: 'clamp(1.5px, 0.3vw, 2px)',
+            height: 'clamp(1.5px, 0.3vw, 2px)',
             background: '#242424ff',
             borderRadius: '50%',
             opacity: 0,

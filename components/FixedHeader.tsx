@@ -51,7 +51,7 @@ const FixedHeader: React.FC<FixedHeaderProps> = ({ isOnAboutMe = false, isOnProj
       left: 0,
       right: 0,
       zIndex: 1000,
-      padding: '40px 60px 20px 60px',
+      padding: 'clamp(20px, 5vh, 40px) clamp(20px, 8vw, 60px) clamp(12px, 2vh, 20px) clamp(20px, 8vw, 60px)',
       background: 'transparent',
       fontFamily: 'system-ui',
       pointerEvents: 'none',
@@ -61,9 +61,9 @@ const FixedHeader: React.FC<FixedHeaderProps> = ({ isOnAboutMe = false, isOnProj
         onClick={() => onNavClick && onNavClick(0)}
         style={{
           position: 'absolute',
-          top: '40px',
-          left: '60px',
-          fontSize: '24px',
+          top: 'clamp(20px, 5vh, 40px)',
+          left: 'clamp(20px, 8vw, 60px)',
+          fontSize: 'clamp(18px, 3vw, 24px)',
           fontWeight: 300,
           letterSpacing: '0.05em',
           color: '#000000',
@@ -106,19 +106,19 @@ const FixedHeader: React.FC<FixedHeaderProps> = ({ isOnAboutMe = false, isOnProj
       <div style={{
         position: 'fixed',
         top: '68%',
-        right: '2%',
+        right: 'clamp(2%, 3vw, 2%)',
         transform: 'translateY(-50%)',
         display: 'flex',
         flexDirection: 'column',
-        gap: '20px',
+        gap: 'clamp(12px, 2.5vh, 20px)',
         pointerEvents: 'auto',
         zIndex: 1000,
       }}>
         <div
           onClick={() => toggleNav(0)}
           style={{
-            width: '16px',
-            height: '16px',
+            width: 'clamp(12px, 2vw, 16px)',
+            height: 'clamp(12px, 2vw, 16px)',
             background: 'transparent',
             border: '1.5px solid #242424ff',
             boxSizing: 'border-box',
@@ -133,8 +133,8 @@ const FixedHeader: React.FC<FixedHeaderProps> = ({ isOnAboutMe = false, isOnProj
         <div
           onClick={() => toggleNav(1)}
           style={{
-            width: '16px',
-            height: '16px',
+            width: 'clamp(12px, 2vw, 16px)',
+            height: 'clamp(12px, 2vw, 16px)',
             background: 'transparent',
             border: '1.5px solid #242424ff',
             boxSizing: 'border-box',
@@ -149,8 +149,8 @@ const FixedHeader: React.FC<FixedHeaderProps> = ({ isOnAboutMe = false, isOnProj
         <div
           onClick={() => toggleNav(2)}
           style={{
-            width: '16px',
-            height: '16px',
+            width: 'clamp(12px, 2vw, 16px)',
+            height: 'clamp(12px, 2vw, 16px)',
             background: 'transparent',
             border: '1.5px solid #242424ff',
             boxSizing: 'border-box',
@@ -165,8 +165,8 @@ const FixedHeader: React.FC<FixedHeaderProps> = ({ isOnAboutMe = false, isOnProj
         <div
           onClick={() => toggleNav(3)}
           style={{
-            width: '16px',
-            height: '16px',
+            width: 'clamp(12px, 2vw, 16px)',
+            height: 'clamp(12px, 2vw, 16px)',
             background: 'transparent',
             border: '1.5px solid #242424ff',
             boxSizing: 'border-box',
